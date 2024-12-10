@@ -37,7 +37,6 @@ local function obfuscate_code(code)
     local var_n = generate_complex_var_name()
     local var_t = generate_complex_var_name()
     local var_k = generate_complex_var_name()
-    local var_load = generate_complex_var_name()
     local var_offset = generate_complex_var_name()
     local var_multiplier = generate_complex_var_name()
     local var_xor = generate_complex_var_name()
@@ -49,10 +48,9 @@ local function obfuscate_code(code)
                               "[i] = tonumber(v) i = i + 1 end i = 1 for v in string.gmatch(" .. var_x ..
                               ", '[^,]+') do local num_v = tonumber(v) " .. var_t .. "[i] = string.char((((num_v ~ " ..
                               var_xor .. ") ~ " .. var_n .. "[i]) / " .. var_multiplier .. ") - i * " .. var_offset ..
-                              ") i = i + 1 end local " .. var_load ..
-                              " = load or function(str) return assert(loadstring(str)) end return " .. var_load ..
-                              "(table.concat(" .. var_t .. "))() end; " .. var_a .. "('" .. encoded .. "','" .. key ..
-                              "')"
+                              ") i = i + 1 end local function execute_code(str) return assert(load(str))() end return execute_code(table.concat(" ..
+                              var_t .. ")) end; " .. var_a .. "('" .. encoded .. "','" .. key .. "')"
+
     return executor_code
 end
 
