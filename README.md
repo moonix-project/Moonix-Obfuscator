@@ -1,6 +1,6 @@
 # 🌙 Moonix Project
 
-Moonix is a Discord server dedicated to providing easy access to free obfuscators ([Join here](https://discord.gg/Agdgwp8efW)) 🛠️. As the developer of the Moonix bot, **tedious**, I decided to take it a step further and create my own obfuscator project. 
+Moonix is a Discord server dedicated to providing easy access to free obfuscators [(Join here)](https://discord.gg/Agdgwp8efW) 🛠️. As the developer of the Moonix bot, **tedious**, I decided to take it a step further and create my own obfuscator project. 
 
 ## 🚧 Current Status
 
