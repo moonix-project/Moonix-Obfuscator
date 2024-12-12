@@ -178,20 +178,44 @@ end
 
 local function add_junk_code(code)
     local junk_lines = {}
-    for _ = 1, math.random(15, 25) do
+    local num_junk_lines = math.random(20, 40)
+    for _ = 1, num_junk_lines do
         local junk_var_name = generate_complex_name()
         local junk_value = math.random(100000, 999999)
         local junk_ops = {"+", "-", "*", "/", "%"}
         local junk_op = junk_ops[math.random(1, #junk_ops)]
         local junk_value2 = math.random(100000, 999999)
-        table.insert(junk_lines, string.format("local %s = %d %s %d", junk_var_name, junk_value, junk_op, junk_value2))
+        local junk_line = string.format("local %s = %d %s %d", junk_var_name, junk_value, junk_op, junk_value2)
+        table.insert(junk_lines, junk_line)
+
         local junk_if_var = generate_complex_name()
-        table.insert(junk_lines, string.format("local %s = %d", junk_if_var, math.random(0, 1)))
-        table.insert(junk_lines, string.format("if %s == 1 then %s = %d end", junk_if_var, junk_var_name,
-            math.random(100000, 999999)))
+        local junk_if_condition = math.random(0, 1)
+        table.insert(junk_lines, string.format("local %s = %d", junk_if_var, junk_if_condition))
+
+        local nested_junk_lines = {}
+        local num_nested_junk = math.random(2, 5)
+        for _ = 1, num_nested_junk do
+            local nested_junk_var = generate_complex_name()
+            local nested_junk_val = math.random(100000, 999999)
+            table.insert(nested_junk_lines, string.format("local %s = %d", nested_junk_var, nested_junk_val))
+        end
+        table.insert(junk_lines, string.format("if %s == %d then %s end", junk_if_var, junk_if_condition, table.concat(nested_junk_lines, "; ")))
+
+        local assignment_chance = math.random(0, 100)
+        if assignment_chance < 70 then
+            table.insert(junk_lines, string.format("if %s == 1 then %s = %d end", junk_if_var, junk_var_name, math.random(100000, 999999)))
+        end
+
+        local function_call_chance = math.random(0, 100)
+        if function_call_chance < 40 then
+            local dummy_func_name = generate_complex_name()
+            table.insert(junk_lines, string.format("local function %s() return %d end", dummy_func_name, math.random(100000, 999999)))
+            table.insert(junk_lines, string.format("%s()", dummy_func_name))
+        end
     end
     return table.concat(junk_lines, "\n") .. "\n" .. code
 end
+
 
 local function virtualize_code(code)
     local vm_name = generate_complex_name()
