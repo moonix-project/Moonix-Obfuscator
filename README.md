@@ -11,3 +11,5 @@ At this stage, what I have is more of an *uglifier* than a true obfuscator. It's
 The goal is to improve this project over time, making it more effective, secure, and complex. I'm committed to refining the code and adding more features to make it a solid tool for developers.
 
 Feel free to follow along and provide feedback! 🚀
+
+`Note: Remove the comments before obfuscating the script. It may cause errors.`
