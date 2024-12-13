@@ -1,5 +1,8 @@
 local obfuscator = {}
 
+local removecomments = require("removecomments")
+local renamer = require("renamer")
+
 local function generate_complex_name(length)
     length = length or math.random(30, 50)
     local chars = {}
@@ -101,12 +104,47 @@ local function encrypt_function_calls(code)
     local math_abs_name = generate_complex_name()
     local string_len_name = generate_complex_name()
     local string_sub_name = generate_complex_name()
+    local function_def_name = generate_complex_name()
 
     local wrapper_code = string.format(
         [[local %s={["%s"]=print,["%s"]=math.random,["%s"]=string.char,["%s"]=table.insert,["%s"]=table.concat,["%s"]=string.format,["%s"]=string.byte,["%s"]=string.gsub,["%s"]=os.time,["%s"]=math.floor,["%s"]=math.abs,["%s"]=string.len,["%s"]=string.sub}
 ]], function_wrapper_name, print_func_name, math_random_name, string_char_name, table_insert_name, table_concat_name,
         string_format_name, string_byte_name, string_gsub_name, os_time_name, math_floor_name, math_abs_name,
         string_len_name, string_sub_name)
+
+    local function encrypt_function_name(func_name)
+        local encrypted = {}
+        local key = math.random(1, 255)
+        for i = 1, #func_name do
+            encrypted[i] = string.format("%d", func_name:byte(i) ~ key)
+        end
+        return string.format("({%s},%d)", table.concat(encrypted, ","), key)
+    end
+
+    local function decode_function_name_func()
+        local decode_func_name = generate_complex_name()
+        return string.format(
+            [[local function %s(t,k)local r="" for i,v in ipairs(t) do r=r..string.char(v~k) end return r end
+]], decode_func_name), decode_func_name
+    end
+
+    local decode_func_code, decode_func_name = decode_function_name_func()
+    code = decode_func_code .. code
+
+    local function generate_obfuscated_function_name()
+        return generate_complex_name()
+    end
+
+    code = code:gsub("function (%w+)(%s*:%s*%w+)?%s*%(", function(func_name, method_call)
+        local obfuscated_func_name = generate_obfuscated_function_name()
+        local obfuscated_func = string.format("local function %s", obfuscated_func_name)
+        if method_call then
+            obfuscated_func = obfuscated_func .. method_call .. "("
+        else
+            obfuscated_func = obfuscated_func .. "("
+        end
+        return obfuscated_func
+    end)
 
     code = code:gsub("(%w+)(%s*%)?)%s*%(", function(func_name, trailing)
         local obfuscated_func = function_wrapper_name .. "['"
@@ -199,23 +237,25 @@ local function add_junk_code(code)
             local nested_junk_val = math.random(100000, 999999)
             table.insert(nested_junk_lines, string.format("local %s = %d", nested_junk_var, nested_junk_val))
         end
-        table.insert(junk_lines, string.format("if %s == %d then %s end", junk_if_var, junk_if_condition, table.concat(nested_junk_lines, "; ")))
+        table.insert(junk_lines, string.format("if %s == %d then %s end", junk_if_var, junk_if_condition,
+            table.concat(nested_junk_lines, "; ")))
 
         local assignment_chance = math.random(0, 100)
         if assignment_chance < 70 then
-            table.insert(junk_lines, string.format("if %s == 1 then %s = %d end", junk_if_var, junk_var_name, math.random(100000, 999999)))
+            table.insert(junk_lines, string.format("if %s == 1 then %s = %d end", junk_if_var, junk_var_name,
+                math.random(100000, 999999)))
         end
 
         local function_call_chance = math.random(0, 100)
         if function_call_chance < 40 then
             local dummy_func_name = generate_complex_name()
-            table.insert(junk_lines, string.format("local function %s() return %d end", dummy_func_name, math.random(100000, 999999)))
+            table.insert(junk_lines, string.format("local function %s() return %d end", dummy_func_name,
+                math.random(100000, 999999)))
             table.insert(junk_lines, string.format("%s()", dummy_func_name))
         end
     end
     return table.concat(junk_lines, "\n") .. "\n" .. code
 end
-
 
 local function virtualize_code(code)
     local vm_name = generate_complex_name()
@@ -293,8 +333,11 @@ end
 function obfuscator.obfuscate_code(code)
     math.randomseed(os.time())
 
-    local obfuscated_code = code
+    local obfuscated_code = removecomments.remove(code)
+    obfuscated_code = renamer.rename(obfuscated_code)
+    
     obfuscated_code = encrypt_strings(obfuscated_code)
+    
     obfuscated_code = encrypt_arithmetic(obfuscated_code)
     obfuscated_code = encrypt_function_calls(obfuscated_code)
     obfuscated_code = add_junk_code(obfuscated_code)
