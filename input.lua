@@ -25,6 +25,10 @@ function inventory:removeItem(itemName)
     return false
 end
 
+--[[
+test
+]]
+
 function inventory:useItem(itemName)
     for i, item in ipairs(self.items) do
         if item.name == itemName then
